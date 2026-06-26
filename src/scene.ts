@@ -35,12 +35,12 @@ export function createScene(): SceneContext {
     new THREE.MeshStandardMaterial({ color: 0x3a3a44, side: THREE.DoubleSide })
   );
   ground.rotation.x = -Math.PI / 2;
-  ground.position.y = -0.5;
+  ground.position.y = 0;
   ground.receiveShadow = true;
   scene.add(ground);
 
   const grid = new THREE.GridHelper(20, 20, 0x666688, 0x333344);
-  grid.position.y = -0.49;
+  grid.position.y = 0.01;
   scene.add(grid);
 
   // --- Lights ---
@@ -59,7 +59,7 @@ export function createScene(): SceneContext {
 
   // --- Camera controls ---
   const controls = new OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true;
+  controls.enableDamping = false;
 
   // --- Keep things correct on window resize ---
   window.addEventListener('resize', () => {
