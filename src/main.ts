@@ -5,9 +5,18 @@ import { Sphere } from "./physics/Sphere";
 
 const { renderer, scene, camera, controls } = createScene();
 
+// Time settings
+const simulationTimeRatio = 0.3;  // Simulation runs 0.3x realtime (slow motion)
+const dt = 0.01;  // Physics timestep
+let lastTime = performance.now() / 1000 * simulationTimeRatio;  // Timestamp at last render
+// Maximum simulation time to run between renders.
+// If physics takes longer than this, we will slow down the simulation rather than
+// show down the frame rate.
+const maxTimeToSimulate = 0.25;
+let leftoverTimeToSimulate = 0;
+
 // World
-const grav_accel = new Vec3(0, -9.81, 0);
-const dt = 0.01;
+const gravAccel = new Vec3(0, -9.81, 0);
 const numSpheres = 10;
 const spheres: Sphere[] = [];
 for (let i = 0; i < numSpheres; ++i) {
@@ -21,13 +30,11 @@ for (let i = 0; i < numSpheres; ++i) {
   );
 }
 spheres.forEach((sphere) =>
-  sphere.SigmaF.copyFrom(grav_accel).scale(sphere.mass),
+  sphere.SigmaF.copyFrom(gravAccel).scale(sphere.mass),
 );
 spheres.forEach((sphere) => scene.add(sphere.mesh));
 
-// --- Main loop -------------------------------------------------------------
-function animate() {
-  // 1. Physics step
+function physicsStep() {
   spheres.forEach((sphere) => sphere.timeIntegrate(dt));
   for (let rep = 0; rep < 4; ++rep) {
     for (let i = 0; i < spheres.length; ++i) {
@@ -36,6 +43,16 @@ function animate() {
       }
     }
     spheres.forEach((sphere) => sphere.handleBounce());
+  }
+}
+
+function animate(timeMs: number) {
+  const curTime = timeMs / 1000 * simulationTimeRatio;
+  leftoverTimeToSimulate += Math.min(curTime - lastTime, maxTimeToSimulate);
+  lastTime = curTime;
+  while (leftoverTimeToSimulate >= dt) {
+    physicsStep();
+    leftoverTimeToSimulate -= dt;
   }
 
   // 2. Update renderer meshs
