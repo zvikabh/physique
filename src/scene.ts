@@ -31,7 +31,7 @@ export function createScene(): SceneContext {
 
   // --- Ground plane + grid ---
   const ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(20, 20),
+    new THREE.PlaneGeometry(4, 4),
     new THREE.MeshStandardMaterial({ color: 0x3a3a44, side: THREE.DoubleSide })
   );
   ground.rotation.x = -Math.PI / 2;
@@ -39,7 +39,7 @@ export function createScene(): SceneContext {
   ground.receiveShadow = true;
   scene.add(ground);
 
-  const grid = new THREE.GridHelper(20, 20, 0x666688, 0x333344);
+  const grid = new THREE.GridHelper(4, 4, 0x666688, 0x333344);
   grid.position.y = 0.01;
   scene.add(grid);
 
