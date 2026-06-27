@@ -2,6 +2,7 @@ import "./style.css";
 import { createScene } from "./scene";
 import { Vec3 } from "./physics/Vec3";
 import { Sphere } from "./physics/Sphere";
+import { woodTextures } from "./textures";
 
 const { renderer, scene, camera, controls } = createScene();
 
@@ -26,7 +27,7 @@ for (let i = 0; i < numSpheres; ++i) {
     Math.random() * 4 - 2,
   );
   spheres.push(
-    new Sphere(pos, Math.random() * 0.5 + 0.05, Math.random(), 0.98),
+    new Sphere(pos, Math.random() * 0.5 + 0.05, Math.random(), 0.98, woodTextures[i]),
   );
 }
 spheres.forEach((sphere) =>

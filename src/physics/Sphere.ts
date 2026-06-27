@@ -24,7 +24,7 @@ export class Sphere {
     radius: number,
     mass: number,
     elasticity: number,
-    color?: number,
+    colorOrTexture?: number | THREE.Texture,
     v?: Vec3,
   ) {
     this.x = x;
@@ -32,10 +32,16 @@ export class Sphere {
     this.mass = mass;
     this.elasticity = elasticity;
     this.v = v || new Vec3(0, 0, 0);
-    this.mesh = new THREE.Mesh(
-      new THREE.SphereGeometry(this.radius),
-      new THREE.MeshStandardMaterial({ color: color || getRandomHexColor() }),
-    );
+    const material = (() => {
+      if (!colorOrTexture) {
+        return new THREE.MeshStandardMaterial({ color: getRandomHexColor() });
+      } else if (typeof colorOrTexture === "number") {
+        return new THREE.MeshStandardMaterial({ color: colorOrTexture });
+      } else {
+        return new THREE.MeshStandardMaterial({ map: colorOrTexture });
+      }
+    })();
+    this.mesh = new THREE.Mesh(new THREE.SphereGeometry(this.radius), material);
     this.updateMesh();
     this.mesh.castShadow = true;
   }
@@ -60,12 +66,18 @@ export class Sphere {
     // normalDir = $\hat{n}$: Unit vector in the direction of impulse.
     const normalDir = this._normalVec.clone().normalize();
 
-    // Move the balls so that they no longer penetrate 
+    // Move the balls so that they no longer penetrate
     // (numerical fix due to non-infinitesimal timestep)
     const penetration = this.radius + other.radius - this._normalVec.length();
     if (penetration > 0.001) {
-      this.x.addScaledVector(normalDir, penetration * other.mass / (this.mass + other.mass));
-      other.x.addScaledVector(normalDir, -penetration * this.mass / (this.mass + other.mass));
+      this.x.addScaledVector(
+        normalDir,
+        (penetration * other.mass) / (this.mass + other.mass),
+      );
+      other.x.addScaledVector(
+        normalDir,
+        (-penetration * this.mass) / (this.mass + other.mass),
+      );
     }
 
     // $v_n = v_{A,\hat{n}} - v_{B,\hat{n}}$
