@@ -59,6 +59,15 @@ export class Sphere {
     // Collision handling logic: See /docs/Ball_to_ball_collision.pdf
     // normalDir = $\hat{n}$: Unit vector in the direction of impulse.
     const normalDir = this._normalVec.clone().normalize();
+
+    // Move the balls so that they no longer penetrate 
+    // (numerical fix due to non-infinitesimal timestep)
+    const penetration = this.radius + other.radius - this._normalVec.length();
+    if (penetration > 0.001) {
+      this.x.addScaledVector(normalDir, penetration * other.mass / (this.mass + other.mass));
+      other.x.addScaledVector(normalDir, -penetration * this.mass / (this.mass + other.mass));
+    }
+
     // $v_n = v_{A,\hat{n}} - v_{B,\hat{n}}$
     const v_n = this.v.clone().sub(other.v).dot(normalDir);
     if (v_n >= 0) {

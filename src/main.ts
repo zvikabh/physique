@@ -16,7 +16,9 @@ for (let i = 0; i < numSpheres; ++i) {
     Math.random() * 2 + 2,
     Math.random() * 4 - 2,
   );
-  spheres.push(new Sphere(pos, Math.random() * 0.3 + 0.2, Math.random(), 0.98));
+  spheres.push(
+    new Sphere(pos, Math.random() * 0.5 + 0.05, Math.random(), 0.98),
+  );
 }
 spheres.forEach((sphere) =>
   sphere.SigmaF.copyFrom(grav_accel).scale(sphere.mass),
@@ -27,12 +29,14 @@ spheres.forEach((sphere) => scene.add(sphere.mesh));
 function animate() {
   // 1. Physics step
   spheres.forEach((sphere) => sphere.timeIntegrate(dt));
-  for (let i = 0; i < spheres.length; ++i) {
-    for (let j = i + 1; j < spheres.length; ++j) {
-      spheres[i].handleCollisionWith(spheres[j]);
+  for (let rep = 0; rep < 4; ++rep) {
+    for (let i = 0; i < spheres.length; ++i) {
+      for (let j = i + 1; j < spheres.length; ++j) {
+        spheres[i].handleCollisionWith(spheres[j]);
+      }
     }
+    spheres.forEach((sphere) => sphere.handleBounce());
   }
-  spheres.forEach((sphere) => sphere.handleBounce());
 
   // 2. Update renderer meshs
   spheres.forEach((sphere) => sphere.updateMesh());
