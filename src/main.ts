@@ -7,9 +7,9 @@ import { woodTextures } from "./textures";
 const { renderer, scene, camera, controls } = createScene();
 
 // Time settings
-const simulationTimeRatio = 0.3;  // Simulation runs 0.3x realtime (slow motion)
-const dt = 0.01;  // Physics timestep
-let lastTime = performance.now() / 1000 * simulationTimeRatio;  // Timestamp at last render
+const simulationTimeRatio = 0.3; // Simulation runs 0.3x realtime (slow motion)
+const dt = 0.01; // Physics timestep
+let lastTime = (performance.now() / 1000) * simulationTimeRatio; // Timestamp at last render
 // Maximum simulation time to run between renders.
 // If physics takes longer than this, we will slow down the simulation rather than
 // show down the frame rate.
@@ -18,6 +18,7 @@ let leftoverTimeToSimulate = 0;
 
 // World
 const gravAccel = new Vec3(0, -9.81, 0);
+const woodDensity = 0.5;
 const numSpheres = 10;
 const spheres: Sphere[] = [];
 for (let i = 0; i < numSpheres; ++i) {
@@ -26,9 +27,9 @@ for (let i = 0; i < numSpheres; ++i) {
     Math.random() * 2 + 2,
     Math.random() * 4 - 2,
   );
-  spheres.push(
-    new Sphere(pos, Math.random() * 0.5 + 0.05, Math.random(), 0.98, woodTextures[i]),
-  );
+  const radius = Math.random() * 0.5 + 0.05;
+  const mass = (4 / 3) * Math.PI * radius ** 3 * woodDensity;
+  spheres.push(new Sphere(pos, radius, mass, 0.98, woodTextures[i]));
 }
 spheres.forEach((sphere) =>
   sphere.SigmaF.copyFrom(gravAccel).scale(sphere.mass),
@@ -48,7 +49,7 @@ function physicsStep() {
 }
 
 function animate(timeMs: number) {
-  const curTime = timeMs / 1000 * simulationTimeRatio;
+  const curTime = (timeMs / 1000) * simulationTimeRatio;
   leftoverTimeToSimulate += Math.min(curTime - lastTime, maxTimeToSimulate);
   lastTime = curTime;
   while (leftoverTimeToSimulate >= dt) {

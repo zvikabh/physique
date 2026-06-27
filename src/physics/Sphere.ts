@@ -44,6 +44,7 @@ export class Sphere {
     this.mesh = new THREE.Mesh(new THREE.SphereGeometry(this.radius), material);
     this.updateMesh();
     this.mesh.castShadow = true;
+    this.mesh.receiveShadow = true;
   }
 
   timeIntegrate(dt: number): this {
