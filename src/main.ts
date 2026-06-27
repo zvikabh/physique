@@ -27,9 +27,13 @@ for (let i = 0; i < numSpheres; ++i) {
     Math.random() * 2 + 2,
     Math.random() * 4 - 2,
   );
+  const vel = new Vec3(0, 0, 0);
+  const omega = new Vec3(Math.random(), Math.random(), Math.random());
   const radius = Math.random() * 0.5 + 0.05;
   const mass = (4 / 3) * Math.PI * radius ** 3 * woodDensity;
-  spheres.push(new Sphere(pos, radius, mass, 0.98, woodTextures[i]));
+  spheres.push(
+    new Sphere(pos, radius, mass, 0.98, woodTextures[i], vel, omega),
+  );
 }
 spheres.forEach((sphere) =>
   sphere.SigmaF.copyFrom(gravAccel).scale(sphere.mass),

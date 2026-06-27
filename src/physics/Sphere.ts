@@ -18,6 +18,9 @@ export class Sphere {
   elasticity: number; // between 0 (fully plastic) and 1 (fully elastic)
   mesh: THREE.Mesh;
   SigmaF = new Vec3(0, 0, 0);
+  orientation: THREE.Quaternion;
+  moment_of_inertia: number;
+  omega: Vec3;
 
   constructor(
     x: Vec3,
@@ -26,12 +29,16 @@ export class Sphere {
     elasticity: number,
     colorOrTexture?: number | THREE.Texture,
     v?: Vec3,
+    omega?: Vec3,
   ) {
     this.x = x;
     this.radius = radius;
     this.mass = mass;
     this.elasticity = elasticity;
     this.v = v || new Vec3(0, 0, 0);
+    this.omega = omega || new Vec3(0, 0, 0);
+    this.orientation = new THREE.Quaternion(1, 0, 0, 0);
+    this.moment_of_inertia = 0.4 * this.mass * this.radius ** 2;
     const material = (() => {
       if (!colorOrTexture) {
         return new THREE.MeshStandardMaterial({ color: getRandomHexColor() });
@@ -47,10 +54,25 @@ export class Sphere {
     this.mesh.receiveShadow = true;
   }
 
+  // Used only in timeIntegrate
+  // (to avoid reallocating the quaternion each time the function is called)
+  private _delta_q = new THREE.Quaternion(1, 0, 0, 0);
   timeIntegrate(dt: number): this {
     // Integrate velocity before position to better preserve energy.
     this.v.addScaledVector(this.SigmaF, dt / this.mass);
     this.x.addScaledVector(this.v, dt);
+
+    // TODO: add torque to angular velocity.
+    // Integrate angular velocity before orientation to better preserve energy.
+
+    // Now integrate orientation.
+    const ang_speed = this.omega.length();
+    if (ang_speed > 1e-5) {
+      const theta = ang_speed * dt;
+      this._delta_q.setFromAxisAngle(this.omega.clone().normalize(), theta);
+      this.orientation.premultiply(this._delta_q).normalize();
+    }
+
     return this;
   }
 
@@ -135,6 +157,7 @@ export class Sphere {
 
   updateMesh(): this {
     this.mesh.position.set(this.x.x, this.x.y, this.x.z);
+    this.mesh.quaternion.copy(this.orientation);
     return this;
   }
 }
