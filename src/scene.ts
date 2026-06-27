@@ -43,6 +43,59 @@ export function createScene(): SceneContext {
   grid.position.y = 0.01;
   scene.add(grid);
 
+  // Walls + grids at the bounce boundaries
+  const wallPos = 2; // matches Sphere.handleBounce()
+  const wallSize = 4; // spans the 4x4 footprint, from y=0 up to y=4
+  const wallMaterial = new THREE.MeshStandardMaterial({
+    color: 0x6a6a88,
+    side: THREE.DoubleSide,
+    transparent: true,
+    opacity: 0.2,
+  });
+
+  const addWall = (
+    position: THREE.Vector3,
+    rotationY: number,
+    gridRotationAxis: "x" | "z",
+  ) => {
+    const wall = new THREE.Mesh(
+      new THREE.PlaneGeometry(wallSize, wallSize),
+      wallMaterial,
+    );
+    wall.position.copy(position);
+    wall.rotation.y = rotationY;
+    scene.add(wall);
+
+    const wallGrid = new THREE.GridHelper(wallSize, wallSize, 0x666688, 0x333344);
+    wallGrid.position.copy(position);
+    (wallGrid.material as THREE.Material).transparent = true;
+    (wallGrid.material as THREE.Material).opacity = 0.5;
+    // GridHelper lies flat in the x-z plane; stand it up to face the wall normal.
+    if (gridRotationAxis === "x") {
+      wallGrid.rotation.x = Math.PI / 2; // wall facing ±z
+    } else {
+      wallGrid.rotation.z = Math.PI / 2; // wall facing ±x
+    }
+    scene.add(wallGrid);
+
+    // Hide this grid whenever its wall faces the camera, so the near walls
+    // don't clutter the view (the wall plane itself stays see-through too).
+    // Driven from the always-rendered wall mesh, since an invisible grid would
+    // never get its own onBeforeRender called again.
+    const outwardNormal = new THREE.Vector3(position.x, 0, position.z).normalize();
+    const wallToCamera = new THREE.Vector3();
+    wall.onBeforeRender = (_renderer, _scene, camera) => {
+      wallToCamera.copy(camera.position).sub(position);
+      wallGrid.visible = outwardNormal.dot(wallToCamera) <= 0;
+    };
+  };
+
+  const wallCenterY = wallSize / 2;
+  addWall(new THREE.Vector3(wallPos, wallCenterY, 0), Math.PI / 2, "z"); // +x
+  addWall(new THREE.Vector3(-wallPos, wallCenterY, 0), Math.PI / 2, "z"); // -x
+  addWall(new THREE.Vector3(0, wallCenterY, wallPos), 0, "x"); // +z
+  addWall(new THREE.Vector3(0, wallCenterY, -wallPos), 0, "x"); // -z
+
   // --- Lights ---
   scene.add(new THREE.AmbientLight(0xffffff, 0.4));
   const keyLight = new THREE.DirectionalLight(0xffffff, 1.0);
