@@ -24,7 +24,7 @@ export class Sphere {
   }
 
   timeIntegrate(SigmaF: Vec3, dt: number): this {
-  // Integrate velocity before position to better preserve energy.
+    // Integrate velocity before position to better preserve energy.
     this.v.addScaledVector(SigmaF, dt / this.mass);
     this.x.addScaledVector(this.v, dt);
 
